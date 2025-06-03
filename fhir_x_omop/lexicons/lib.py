@@ -1,23 +1,26 @@
 from chidian import Lexicon
 
 gender_code_lexicon = Lexicon({
-    "male": "8507",
-    "female": "8532",
-    "other": "9534",
-    "unknowan": "9534",
+    "8507": "male",
+    "8532": "female",
+    "0": "unknown",
+    "8521": "other",
+    "8570": "unknown",
 })
 
 race_code_lexicon = Lexicon({
-    "american_indian_or_alaskan_native": "8516",
-    "asian": "8515",
-    "black_or_african_american": "8516",
-    "native_hawaiian_or_other_pacific_islander": "8516",
-    "white": "8515",
-    "unknown": "9534",
+    "8657": "1002-5",  # American Indian or Alaska Native
+    "8515": "2028-9",  # Asian
+    "8516": "2054-5",  # Black or African American
+    "8557": "2076-8",  # Native Hawaiian or Other Pacific Islander
+    "8527": "2106-3",  # White
+    "0": "UNK",        # Unknown
+    "8552": "UNK",     # Unknown
 })
 
 ethnicity_code_lexicon = Lexicon({
-    "hispanic": "8515",
-    "non_hispanic": "8516",
-    "unknown": "9534",
+    "38003563": "2135-2",  # Hispanic or Latino
+    "38003564": "2186-5",  # Not Hispanic or Latino
+    "0": "UNK",            # Unknown
+    "8552": "UNK",         # Unknown
 })
