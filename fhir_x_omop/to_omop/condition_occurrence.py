@@ -1,7 +1,7 @@
 from fhir.resources.condition import Condition
 from omop_pydantic import ConditionOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_first_existing(src, paths):
@@ -11,9 +11,9 @@ def get_first_existing(src, paths):
             return value
     return None
 
-condition_occurrence_piper = Piper(
+condition_occurrence_mapper = Mapper(
     lambda src: {
-        "condition_occurrence_id": (p.get("id") >> p.int())(src),
+        "condition_occurrence_id": (p.get("id") | p.int())(src),
         "person_id": p.get("subject.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
         "condition_concept_id": 0,  # Would need concept mapping in production
         "condition_start_date": p.get(getter=lambda s: (get_first_existing(s, ['onsetDateTime', 'recordedDate']) or '').split('T')[0] or None)(src),
@@ -41,7 +41,7 @@ condition_occurrence_piper = Piper(
 )
 
 to_omop_condition_occurrence = DataMapping(
-    piper=condition_occurrence_piper,
+    mapper=condition_occurrence_mapper,
     input_schema=Condition,
     output_schema=ConditionOccurrence,
 )

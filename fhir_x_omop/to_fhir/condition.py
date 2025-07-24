@@ -1,16 +1,16 @@
 from fhir.resources.condition import Condition
 from omop_pydantic import ConditionOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-condition_piper = Piper(
+condition_mapper = Mapper(
     lambda src: {
         "resourceType": "Condition",
-        "id": (p.get("condition_occurrence_id") >> p.str())(src),
+        "id": (p.get("condition_occurrence_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/condition",
-            "value": (p.get("condition_occurrence_id") >> p.str())(src),
+            "value": (p.get("condition_occurrence_id") | p.str())(src),
         }],
         "clinicalStatus": {
             "coding": [{
@@ -49,16 +49,16 @@ condition_piper = Piper(
             }]
         },
         "subject": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
         "encounter": {
-            "reference": (p.get("visit_occurrence_id") >> p.format("Encounter/{}"))(src)
+            "reference": (p.get("visit_occurrence_id") | p.format("Encounter/{}"))(src)
         },
-        "onsetDateTime": (p.get("condition_start_datetime") >> p.str())(src),
-        "abatementDateTime": (p.get("condition_end_datetime") >> p.str())(src),
-        "recordedDate": (p.get("condition_start_datetime") >> p.str())(src),
+        "onsetDateTime": (p.get("condition_start_datetime") | p.str())(src),
+        "abatementDateTime": (p.get("condition_end_datetime") | p.str())(src),
+        "recordedDate": (p.get("condition_start_datetime") | p.str())(src),
         "recorder": {
-            "reference": (p.get("provider_id") >> p.format("Practitioner/{}"))(src)
+            "reference": (p.get("provider_id") | p.format("Practitioner/{}"))(src)
         },
         "note": [{
             "text": p.get("stop_reason")(src)
@@ -67,7 +67,7 @@ condition_piper = Piper(
 )
 
 to_fhir_condition = DataMapping(
-    piper=condition_piper,
+    mapper=condition_mapper,
     input_schema=ConditionOccurrence,
     output_schema=Condition,
 )

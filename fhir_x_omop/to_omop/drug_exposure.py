@@ -1,7 +1,7 @@
 from fhir.resources.immunization import Immunization
 from omop_pydantic import DrugExposure
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_first_existing(src, paths):
@@ -11,9 +11,9 @@ def get_first_existing(src, paths):
             return value
     return None
 
-drug_exposure_piper = Piper(
+drug_exposure_mapper = Mapper(
     lambda src: {
-        "drug_exposure_id": (p.get("id") >> p.int())(src),
+        "drug_exposure_id": (p.get("id") | p.int())(src),
         "person_id": p.get("patient.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
         "drug_concept_id": 0,  # Would need concept mapping in production
         "drug_exposure_start_date": p.get("occurrenceDateTime", getter=lambda x: x.split('T')[0] if x else None)(src),
@@ -27,9 +27,9 @@ drug_exposure_piper = Piper(
         }, default=38000175),  # Prescription
         "stop_reason": None,
         "refills": 0,
-        "quantity": (p.get("doseQuantity.value", default=1.0) >> p.float())(src),
+        "quantity": (p.get("doseQuantity.value", default=1.0) | p.float())(src),
         "days_supply": 1,  # Immunizations are single dose
-        "sig": (p.get(getter=lambda s: get_first_existing(s, ["vaccineCode.coding[0].display", "vaccineCode.text"])) >> p.format("Immunization: {}"))(src),
+        "sig": (p.get(getter=lambda s: get_first_existing(s, ["vaccineCode.coding[0].display", "vaccineCode.text"])) | p.format("Immunization: {}"))(src),
         "route_concept_id": 0,
         "lot_number": p.get("lotNumber")(src),
         "provider_id": p.get("performer[0].actor.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
@@ -48,7 +48,7 @@ drug_exposure_piper = Piper(
 )
 
 to_omop_drug_exposure = DataMapping(
-    piper=drug_exposure_piper,
+    mapper=drug_exposure_mapper,
     input_schema=Immunization,
     output_schema=DrugExposure,
 )

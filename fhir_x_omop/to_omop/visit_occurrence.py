@@ -1,7 +1,7 @@
 from fhir.resources.encounter import Encounter
 from omop_pydantic import VisitOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_attending_provider_id(participants):
@@ -16,9 +16,9 @@ def get_attending_provider_id(participants):
             return int(participant.individual.reference.split('/')[1])
     return None
 
-visit_occurrence_piper = Piper(
+visit_occurrence_mapper = Mapper(
     lambda src: {
-        "visit_occurrence_id": (p.get("id") >> p.int())(src),
+        "visit_occurrence_id": (p.get("id") | p.int())(src),
         "person_id": p.get("subject.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
         "visit_concept_id": p.case(p.get("class.code")(src), {
             "IMP": 9201,      # Inpatient Visit
@@ -50,7 +50,7 @@ visit_occurrence_piper = Piper(
 )
 
 to_omop_visit_occurrence = DataMapping(
-    piper=visit_occurrence_piper,
+    mapper=visit_occurrence_mapper,
     input_schema=Encounter,
     output_schema=VisitOccurrence,
 )

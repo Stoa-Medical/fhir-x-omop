@@ -1,7 +1,7 @@
 from fhir.resources.patient import Patient
 from omop_pydantic import Person
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 from ..lexicons.lib import gender_code_lexicon, race_code_lexicon, ethnicity_code_lexicon
@@ -14,22 +14,22 @@ def format_birth_date(src):
     ]
     return "-".join(str(part) for part in parts if part is not None)
 
-patient_piper = Piper(
+patient_mapper = Mapper(
     lambda src: {
         "resourceType": "Patient",
-        "id": (p.get("person_id") >> p.str())(src),
+        "id": (p.get("person_id") | p.str())(src),
         "identifier": [{
             "use": "usual",
             "system": "http://omop.org/person",
-            "value": (p.get("person_id") >> p.str())(src),
+            "value": (p.get("person_id") | p.str())(src),
         }],
         "gender": p.lookup(
-            (p.get("gender_concept_id") >> p.str())(src),
+            (p.get("gender_concept_id") | p.str())(src),
             gender_code_lexicon,
             default="unknown"
         ),
         "birthDate": format_birth_date(src),
-        "deceasedDateTime": (p.get("death_datetime") >> p.str())(src),
+        "deceasedDateTime": (p.get("death_datetime") | p.str())(src),
         "extension": [
             {
                 "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
@@ -38,12 +38,12 @@ patient_piper = Piper(
                     "valueCoding": {
                         "system": "urn:oid:2.16.840.1.113883.6.238",
                         "code": p.lookup(
-                            (p.get("race_concept_id") >> p.str())(src),
+                            (p.get("race_concept_id") | p.str())(src),
                             race_code_lexicon,
                             default="UNK"
                         ),
                         "display": p.case(p.lookup(
-                            (p.get("race_concept_id") >> p.str())(src),
+                            (p.get("race_concept_id") | p.str())(src),
                             race_code_lexicon,
                             default="UNK"
                         ), {
@@ -63,12 +63,12 @@ patient_piper = Piper(
                     "valueCoding": {
                         "system": "urn:oid:2.16.840.1.113883.6.238",
                         "code": p.lookup(
-                            (p.get("ethnicity_concept_id") >> p.str())(src),
+                            (p.get("ethnicity_concept_id") | p.str())(src),
                             ethnicity_code_lexicon,
                             default="UNK"
                         ),
                         "display": p.case(p.lookup(
-                            (p.get("ethnicity_concept_id") >> p.str())(src),
+                            (p.get("ethnicity_concept_id") | p.str())(src),
                             ethnicity_code_lexicon,
                             default="UNK"
                         ), {
@@ -83,7 +83,7 @@ patient_piper = Piper(
 )
 
 to_fhir_patient = DataMapping(
-    piper=patient_piper,
+    mapper=patient_mapper,
     input_schema=Person,
     output_schema=Patient,
 )

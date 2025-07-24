@@ -1,7 +1,7 @@
 from fhir.resources.practitioner import Practitioner
 from omop_pydantic import Provider
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_provider_name(name_list):
@@ -20,9 +20,9 @@ def get_npi(identifier_list):
             return identifier.value
     return None
 
-provider_piper = Piper(
+provider_mapper = Mapper(
     lambda src: {
-        "provider_id": (p.get("id") >> p.int())(src),
+        "provider_id": (p.get("id") | p.int())(src),
         "provider_source_value": p.get("id")(src),
         "provider_name": p.get("name", getter=get_provider_name)(src),
         "npi": p.get("identifier", getter=get_npi)(src),
@@ -33,7 +33,7 @@ provider_piper = Piper(
 )
 
 to_omop_provider = DataMapping(
-    piper=provider_piper,
+    mapper=provider_mapper,
     input_schema=Practitioner,
     output_schema=Provider,
 )

@@ -1,7 +1,7 @@
 from fhir.resources.careplan import CarePlan
 from omop_pydantic import Observation
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_first_existing(src, paths):
@@ -11,9 +11,9 @@ def get_first_existing(src, paths):
             return value
     return None
 
-observation_from_careplan_piper = Piper(
+observation_from_careplan_mapper = Mapper(
     lambda src: {
-        "observation_id": (p.get("id") >> p.int())(src),
+        "observation_id": (p.get("id") | p.int())(src),
         "person_id": p.get("subject.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
         "observation_concept_id": 0,  # Would need concept mapping for care plan in production
         "observation_date": p.get("created", getter=lambda x: x.split('T')[0] if x else None)(src),
@@ -40,7 +40,7 @@ observation_from_careplan_piper = Piper(
 )
 
 to_omop_observation_from_careplan = DataMapping(
-    piper=observation_from_careplan_piper,
+    mapper=observation_from_careplan_mapper,
     input_schema=CarePlan,
     output_schema=Observation,
 )

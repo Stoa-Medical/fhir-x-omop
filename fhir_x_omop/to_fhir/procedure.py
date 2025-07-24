@@ -1,16 +1,16 @@
 from fhir.resources.procedure import Procedure
 from omop_pydantic import ProcedureOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-procedure_piper = Piper(
+procedure_mapper = Mapper(
     lambda src: {
         "resourceType": "Procedure",
-        "id": (p.get("procedure_occurrence_id") >> p.str())(src),
+        "id": (p.get("procedure_occurrence_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/procedure",
-            "value": (p.get("procedure_occurrence_id") >> p.str())(src),
+            "value": (p.get("procedure_occurrence_id") | p.str())(src),
         }],
         "status": "completed",
         "code": {
@@ -25,22 +25,22 @@ procedure_piper = Piper(
             }]
         },
         "subject": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
         "encounter": {
-            "reference": (p.get("visit_occurrence_id") >> p.format("Encounter/{}"))(src)
+            "reference": (p.get("visit_occurrence_id") | p.format("Encounter/{}"))(src)
         },
-        "performedDateTime": (p.get("procedure_datetime") >> p.str())(src),
+        "performedDateTime": (p.get("procedure_datetime") | p.str())(src),
         "performer": [{
             "actor": {
-                "reference": (p.get("provider_id") >> p.format("Practitioner/{}"))(src)
+                "reference": (p.get("provider_id") | p.format("Practitioner/{}"))(src)
             }
         }],
     }
 )
 
 to_fhir_procedure = DataMapping(
-    piper=procedure_piper,
+    mapper=procedure_mapper,
     input_schema=ProcedureOccurrence,
     output_schema=Procedure,
 )

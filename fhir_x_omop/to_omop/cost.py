@@ -1,7 +1,7 @@
 from fhir.resources.claim import Claim
 from omop_pydantic import Cost
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
 def get_adjudication_sum(items, category):
@@ -25,10 +25,10 @@ def get_total_paid(src):
         return float(benefit_sum)
     return None
 
-cost_piper = Piper(
+cost_mapper = Mapper(
     lambda src: {
-        "cost_id": (p.get("id") >> p.int())(src),
-        "cost_event_id": (p.get("id") >> p.int())(src),
+        "cost_id": (p.get("id") | p.int())(src),
+        "cost_event_id": (p.get("id") | p.int())(src),
         "cost_domain_id": p.case(p.get("type.coding[0].code")(src), {
             "institutional": "Visit",
             "professional": "Procedure",
@@ -40,8 +40,8 @@ cost_piper = Piper(
             "pharmacy": 32813,
         }, default=32814),
         "currency_concept_id": 44818668,  # USD
-        "total_charge": (p.get("total.value") >> p.float())(src),
-        "total_cost": (p.get("total.value") >> p.float())(src),
+        "total_charge": (p.get("total.value") | p.float())(src),
+        "total_cost": (p.get("total.value") | p.float())(src),
         "total_paid": get_total_paid(src),
         "paid_by_payer": get_total_paid(src), # Same logic as total_paid
         "paid_by_patient": p.get("item", getter=lambda x: get_adjudication_sum(x, 'copay') or 0.0)(src),
@@ -61,7 +61,7 @@ cost_piper = Piper(
 )
 
 to_omop_cost = DataMapping(
-    piper=cost_piper,
+    mapper=cost_mapper,
     input_schema=Claim,
     output_schema=Cost,
 )

@@ -1,16 +1,16 @@
 from fhir.resources.observation import Observation
 from omop_pydantic import Observation as OMOPObservation
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-observation_piper = Piper(
+observation_mapper = Mapper(
     lambda src: {
         "resourceType": "Observation",
-        "id": (p.get("observation_id") >> p.str())(src),
+        "id": (p.get("observation_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/observation",
-            "value": (p.get("observation_id") >> p.str())(src),
+            "value": (p.get("observation_id") | p.str())(src),
         }],
         "status": "final",
         "code": {
@@ -24,18 +24,18 @@ observation_piper = Piper(
             }]
         },
         "subject": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
         "encounter": {
-            "reference": (p.get("visit_occurrence_id") >> p.format("Encounter/{}"))(src)
+            "reference": (p.get("visit_occurrence_id") | p.format("Encounter/{}"))(src)
         },
-        "effectiveDateTime": (p.get("observation_datetime") >> p.str())(src),
-        "issued": (p.get("observation_datetime") >> p.str())(src),
+        "effectiveDateTime": (p.get("observation_datetime") | p.str())(src),
+        "issued": (p.get("observation_datetime") | p.str())(src),
         "performer": [{
-            "reference": (p.get("provider_id") >> p.format("Practitioner/{}"))(src)
+            "reference": (p.get("provider_id") | p.format("Practitioner/{}"))(src)
         }],
         "valueQuantity": p.if_else(
-            (p.get("value_as_number") >> p.exists())(src),
+            (p.get("value_as_number") | p.exists())(src),
             {
                 "value": p.get("value_as_number")(src),
                 "unit": p.get("unit_source_value")(src),
@@ -46,11 +46,11 @@ observation_piper = Piper(
         ),
         "valueString": p.get("value_as_string")(src),
         "valueCodeableConcept": p.if_else(
-            (p.get("value_as_concept_id") >> p.exists())(src),
+            (p.get("value_as_concept_id") | p.exists())(src),
             {
                 "coding": [{
                     "system": "http://omop.org/concept",
-                    "code": (p.get("value_as_concept_id") >> p.str())(src),
+                    "code": (p.get("value_as_concept_id") | p.str())(src),
                     "display": p.get("value_source_value")(src),
                 }]
             },
@@ -60,7 +60,7 @@ observation_piper = Piper(
 )
 
 to_fhir_observation = DataMapping(
-    piper=observation_piper,
+    mapper=observation_mapper,
     input_schema=OMOPObservation,
     output_schema=Observation,
 )

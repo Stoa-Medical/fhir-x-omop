@@ -1,16 +1,16 @@
 from fhir.resources.claim import Claim
 from omop_pydantic import Cost
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-claim_piper = Piper(
+claim_mapper = Mapper(
     lambda src: {
         "resourceType": "Claim",
-        "id": (p.get("cost_id") >> p.str())(src),
+        "id": (p.get("cost_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/cost",
-            "value": (p.get("cost_id") >> p.str())(src),
+            "value": (p.get("cost_id") | p.str())(src),
         }],
         "status": "active",
         "type": {
@@ -30,14 +30,14 @@ claim_piper = Piper(
         },
         "use": "claim",
         "patient": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
-        "created": (p.get("cost_date") >> p.str())(src),
+        "created": (p.get("cost_date") | p.str())(src),
         "insurance": [{
             "sequence": 1,
             "focal": True,
             "coverage": {
-                "reference": (p.get("payer_plan_period_id") >> p.format("Coverage/{}"))(src)
+                "reference": (p.get("payer_plan_period_id") | p.format("Coverage/{}"))(src)
             }
         }],
         "item": [{
@@ -129,7 +129,7 @@ claim_piper = Piper(
 )
 
 to_fhir_claim = DataMapping(
-    piper=claim_piper,
+    mapper=claim_mapper,
     input_schema=Cost,
     output_schema=Claim,
 )

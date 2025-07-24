@@ -1,12 +1,12 @@
 from fhir.resources.procedure import Procedure
 from omop_pydantic import ProcedureOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-procedure_occurrence_piper = Piper(
+procedure_occurrence_mapper = Mapper(
     lambda src: {
-        "procedure_occurrence_id": (p.get("id") >> p.int())(src),
+        "procedure_occurrence_id": (p.get("id") | p.int())(src),
         "person_id": p.get("subject.reference", getter=lambda x: int(x.split('/')[1]) if x else None)(src),
         "procedure_concept_id": 0,  # Would need concept mapping in production
         "procedure_date": p.get("performedDateTime", getter=lambda x: x.split('T')[0] if x else None)(src),
@@ -28,7 +28,7 @@ procedure_occurrence_piper = Piper(
 )
 
 to_omop_procedure_occurrence = DataMapping(
-    piper=procedure_occurrence_piper,
+    mapper=procedure_occurrence_mapper,
     input_schema=Procedure,
     output_schema=ProcedureOccurrence,
 )

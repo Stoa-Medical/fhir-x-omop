@@ -5,7 +5,7 @@ description = "Bi-directional mapping between FHIR and OMOP CDM"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "chidian>=0.1.0",
+    "chidian>=0.1.1",
     "fhir-resources>=8.0.0",
     "omop-pydantic>=0.1.0",
 ]

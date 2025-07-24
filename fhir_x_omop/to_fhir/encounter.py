@@ -1,16 +1,16 @@
 from fhir.resources.encounter import Encounter
 from omop_pydantic import VisitOccurrence
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-encounter_piper = Piper(
+encounter_mapper = Mapper(
     lambda src: {
         "resourceType": "Encounter",
-        "id": (p.get("visit_occurrence_id") >> p.str())(src),
+        "id": (p.get("visit_occurrence_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/visit",
-            "value": (p.get("visit_occurrence_id") >> p.str())(src),
+            "value": (p.get("visit_occurrence_id") | p.str())(src),
         }],
         "status": "finished",
         "class": {
@@ -38,7 +38,7 @@ encounter_piper = Piper(
             }]
         }],
         "subject": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
         "participant": [{
             "type": [{
@@ -49,12 +49,12 @@ encounter_piper = Piper(
                 }]
             }],
             "individual": {
-                "reference": (p.get("provider_id") >> p.format("Practitioner/{}"))(src)
+                "reference": (p.get("provider_id") | p.format("Practitioner/{}"))(src)
             }
         }],
         "period": {
-            "start": (p.get("visit_start_datetime") >> p.str())(src),
-            "end": (p.get("visit_end_datetime") >> p.str())(src)
+            "start": (p.get("visit_start_datetime") | p.str())(src),
+            "end": (p.get("visit_end_datetime") | p.str())(src)
         },
         "hospitalization": {
             "dischargeDisposition": {
@@ -78,13 +78,13 @@ encounter_piper = Piper(
             }
         },
         "serviceProvider": {
-            "reference": (p.get("care_site_id") >> p.format("Organization/{}"))(src)
+            "reference": (p.get("care_site_id") | p.format("Organization/{}"))(src)
         }
     }
 )
 
 to_fhir_encounter = DataMapping(
-    piper=encounter_piper,
+    mapper=encounter_mapper,
     input_schema=VisitOccurrence,
     output_schema=Encounter,
 )

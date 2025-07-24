@@ -1,16 +1,16 @@
 from fhir.resources.immunization import Immunization
 from omop_pydantic import DrugExposure
 
-from chidian import DataMapping, Piper
+from chidian import DataMapping, Mapper
 import chidian.partials as p
 
-immunization_piper = Piper(
+immunization_mapper = Mapper(
     lambda src: {
         "resourceType": "Immunization",
-        "id": (p.get("drug_exposure_id") >> p.str())(src),
+        "id": (p.get("drug_exposure_id") | p.str())(src),
         "identifier": [{
             "system": "http://omop.org/drug_exposure",
-            "value": (p.get("drug_exposure_id") >> p.str())(src),
+            "value": (p.get("drug_exposure_id") | p.str())(src),
         }],
         "status": "completed",
         "vaccineCode": {
@@ -24,13 +24,13 @@ immunization_piper = Piper(
             }]
         },
         "patient": {
-            "reference": (p.get("person_id") >> p.format("Patient/{}"))(src)
+            "reference": (p.get("person_id") | p.format("Patient/{}"))(src)
         },
         "encounter": {
-            "reference": (p.get("visit_occurrence_id") >> p.format("Encounter/{}"))(src)
+            "reference": (p.get("visit_occurrence_id") | p.format("Encounter/{}"))(src)
         },
-        "occurrenceDateTime": (p.get("drug_exposure_start_datetime") >> p.str())(src),
-        "recorded": (p.get("drug_exposure_start_datetime") >> p.str())(src),
+        "occurrenceDateTime": (p.get("drug_exposure_start_datetime") | p.str())(src),
+        "recorded": (p.get("drug_exposure_start_datetime") | p.str())(src),
         "primarySource": True,
         "lotNumber": p.get("lot_number")(src),
         "route": {
@@ -46,7 +46,7 @@ immunization_piper = Piper(
             }]
         },
         "doseQuantity": {
-            "value": (p.get("quantity") >> p.float())(src),
+            "value": (p.get("quantity") | p.float())(src),
             "unit": p.get("dose_unit_source_value", default='dose')(src),
             "system": "http://unitsofmeasure.org",
             "code": p.get("dose_unit_source_value", default='dose')(src)
@@ -60,14 +60,14 @@ immunization_piper = Piper(
                 }]
             },
             "actor": {
-                "reference": (p.get("provider_id") >> p.format("Practitioner/{}"))(src)
+                "reference": (p.get("provider_id") | p.format("Practitioner/{}"))(src)
             }
         }],
     }
 )
 
 to_fhir_immunization = DataMapping(
-    piper=immunization_piper,
+    mapper=immunization_mapper,
     input_schema=DrugExposure,
     output_schema=Immunization,
 )
