@@ -5,11 +5,7 @@ description = "Bi-directional mapping between FHIR and OMOP CDM"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "chidian",
+    "chidian>=0.1.0",
     "fhir-resources>=8.0.0",
-    "omop-pydantic",
+    "omop-pydantic>=0.1.0",
 ]
-
-[tool.uv.sources]
-chidian = { path = "temp/chidian-0.1.0-cp312-cp312-macosx_11_0_arm64.whl" }
-omop-pydantic = { path = "temp/omop_pydantic-0.1.0-py3-none-any.whl" }
